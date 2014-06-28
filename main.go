@@ -1,11 +1,24 @@
 package main
 
 import (
-    "io"
+    "fmt"
+    "encoding/json"
     "log"
     "net/http"
-    "os"
 )
+
+type Item struct {
+    Title string
+    URL string
+}
+
+type Response struct {
+    Data struct {
+        Children []struct {
+            Data Item
+        }
+    }
+}
 
 func main() {
     response, err := http.Get("http://reddit.com/r/golang.json")
@@ -17,8 +30,10 @@ func main() {
 	log.Fatal(response.Status)
     }
 
-    _, err = io.Copy(os.Stdout, response.Body)
-    if err != nil {
-	log.Fatal(err)
+    resp := new(Response)
+    err = json.NewDecoder(response.Body).Decode(resp)
+
+    for _, child := range resp.Data.Children {
+        fmt.Println(child.Data.Title)
     }
 }
